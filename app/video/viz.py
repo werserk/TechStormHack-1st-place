@@ -1,10 +1,19 @@
 import cv2
 import numpy as np
 
+GREEN_COLOR = (0, 255, 0)
+FONT = cv2.FONT_HERSHEY_DUPLEX
+THICKNESS = 2
 
-def draw_face_bbox(frame: np.ndarray, name: str, coords: tuple) -> None:
+
+def draw_person_name(frame: np.ndarray, name: str, coords: tuple) -> None:
     top, right, bottom, left = coords
-    cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
-    cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
-    font = cv2.FONT_HERSHEY_DUPLEX
-    cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+    right_padding = 20
+    right_line = 200
+    top_padding = 20
+
+    cv2.line(frame, (right, top),
+             (right + right_padding, top - top_padding), GREEN_COLOR, THICKNESS)
+    cv2.line(frame, (right + right_padding, top - top_padding),
+             (right + right_line, top - top_padding), GREEN_COLOR, THICKNESS)
+    cv2.putText(frame, name, (right + right_padding, top - top_padding * 2), FONT, 1, GREEN_COLOR, THICKNESS)

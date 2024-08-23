@@ -35,7 +35,7 @@ while True:
     face_landmarks = predictions["landmarks"]
 
     for i in range(len(face_locations)):
-        viz.draw_face_bbox(frame, names[i], face_locations[i])
+        viz.draw_person_name(frame, names[i], face_locations[i])
 
     cv2.imshow("Video", frame)
 
