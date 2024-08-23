@@ -1,23 +1,20 @@
-import logging
 import os
 
 import cv2
 
-import app.viz as viz
-from app.face import FaceAnalytics
-
-logging.basicConfig(level=logging.DEBUG)
-
-logger = logging.getLogger(__name__)
+import app.video.viz as viz
+from app.video import FaceAnalytics
 
 DATA_DIR = "../data"
 
 video_capture = cv2.VideoCapture(0)
 
-face_analyzer = FaceAnalytics(characters={
-    "Max": os.path.join(DATA_DIR, "max.jpg"),
-    "Artem": os.path.join(DATA_DIR, "artem.jpg"),
-})
+face_analyzer = FaceAnalytics(
+    characters={
+        "Max": os.path.join(DATA_DIR, "max.jpg"),
+        "Artem": os.path.join(DATA_DIR, "artem.jpg"),
+    }
+)
 
 while True:
     ret, frame = video_capture.read()
