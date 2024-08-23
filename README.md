@@ -30,13 +30,31 @@ docker compose up
 
 ### Запуск для разработки
 
+Установите Cmake:
+
+```bash
+sudo apt-get install build-essential cmake &&
+sudo apt-get install libgtk-3-dev &&
+sudo apt-get install libboost-all-dev
+```
+
+Создайте виртуальное окружение и активируйте его:
+
+```bash
+virtualenv -p python3 venv && source venv/bin/activate
+```
+
 Установите зависимости:
 
 ```bash
 poetry install
 ```
 
-Запуск стримлита:
+Библиотека dlib может устанавливаться долго - это нормально, она компилируется.
+Если всё же не удается установить через `poetry` - установите через `pip install dlib`, после опять запустите команду
+выше.
+
+Запуск веб-интерфейса:
 
 ```bash
 streamlit run streamlit_app.py
