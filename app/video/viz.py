@@ -12,8 +12,12 @@ def draw_person_name(frame: np.ndarray, name: str, coords: tuple) -> None:
     right_line = 200
     top_padding = 20
 
-    cv2.line(frame, (right, top),
-             (right + right_padding, top - top_padding), GREEN_COLOR, THICKNESS)
-    cv2.line(frame, (right + right_padding, top - top_padding),
-             (right + right_line, top - top_padding), GREEN_COLOR, THICKNESS)
+    cv2.line(frame, (right, top), (right + right_padding, top - top_padding), GREEN_COLOR, THICKNESS)
+    cv2.line(
+        frame,
+        (right + right_padding, top - top_padding),
+        (right + right_line, top - top_padding),
+        GREEN_COLOR,
+        THICKNESS,
+    )
     cv2.putText(frame, name, (right + right_padding, top - top_padding * 2), FONT, 1, GREEN_COLOR, THICKNESS)
