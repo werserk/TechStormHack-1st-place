@@ -6,19 +6,23 @@ import numpy as np
 
 
 class PersonDetector:
-    def __init__(self, persons: Dict[str, str]):
+    def __init__(self, persons: Optional[Dict[str, str]] = None):
         self.downscale_factor = 0.2
         self._persons = {}
         self._persons_names = []
         self._persons_encodings = []
-        self.persons = persons
+        if persons is not None:
+            self.persons = persons
+        print("Person detector initialized.")
 
     @property
     def persons(self):
         return self._persons
 
     @persons.setter
-    def persons(self, persons: Dict[str, str]):
+    def persons(self, persons: Optional[Dict[str, str]] = None):
+        if persons is None:
+            persons = {}
         self._persons = {
             name: {
                 "path": value,
