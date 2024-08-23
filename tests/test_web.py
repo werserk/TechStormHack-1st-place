@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = "../../data"
+DATA_DIR = "../data"
 
 video_capture = cv2.VideoCapture(0)
 
