@@ -30,12 +30,14 @@ docker compose up
 
 ### Запуск для разработки
 
-Установите Cmake:
+Установите зависимости в систему:
 
 ```bash
 sudo apt-get install build-essential cmake &&
 sudo apt-get install libgtk-3-dev &&
-sudo apt-get install libboost-all-dev
+sudo apt-get install libboost-all-dev &&
+sudo apt-get install libportaudio2 && 
+sudo apt-get install portaudio19-dev
 ```
 
 Создайте виртуальное окружение и активируйте его:

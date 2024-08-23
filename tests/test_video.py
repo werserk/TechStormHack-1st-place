@@ -17,12 +17,18 @@ face_analyzer = FaceAnalytics(
     }
 )
 
+predict_pause_number_frames = 5
+k = 0
+
 while True:
     start_time = time.time()
     ret, frame = video_capture.read()
-    predictions = face_analyzer(frame)
-    if predictions is None:
-        continue
+
+    if k % predict_pause_number_frames == 0:
+        predictions = face_analyzer(frame)
+        if predictions is None:
+            continue
+    k += 1
 
     names = predictions["names"]
     face_locations = predictions["locations"]
