@@ -5,7 +5,8 @@ class SpeakerClassifier:
     def __init__(self) -> None:
         self.model = Pipeline.from_pretrained(
             "pyannote/speaker-diarization-3.1",
-            use_auth_token="YOUR_HF_TOKEN_HERE")
+            use_auth_token="YOUR_HF_TOKEN_HERE",
+        )
 
     def __call__(self, audio_data) -> None:
         return self.model(audio_data)
