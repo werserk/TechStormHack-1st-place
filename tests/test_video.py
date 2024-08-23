@@ -4,14 +4,14 @@ import time
 import cv2
 
 import app.video.viz as viz
-from app.video import FaceAnalytics
+from app.video import PersonDetector
 
 DATA_DIR = "../data"
 
 video_capture = cv2.VideoCapture(0)
 
-face_analyzer = FaceAnalytics(
-    characters={
+face_analyzer = PersonDetector(
+    persons={
         "Max": os.path.join(DATA_DIR, "max.jpg"),
         "Artem": os.path.join(DATA_DIR, "artem.jpg"),
     }

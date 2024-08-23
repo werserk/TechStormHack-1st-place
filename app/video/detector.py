@@ -5,43 +5,43 @@ import face_recognition
 import numpy as np
 
 
-class FaceAnalytics:
-    def __init__(self, characters: Dict[str, str]):
+class PersonDetector:
+    def __init__(self, persons: Dict[str, str]):
         self.downscale_factor = 0.2
-        self._characters = {}
-        self._character_names = []
-        self._character_encodings = []
-        self.characters = characters
+        self._persons = {}
+        self._persons_names = []
+        self._persons_encodings = []
+        self.persons = persons
 
     @property
-    def characters(self):
-        return self._characters
+    def persons(self):
+        return self._persons
 
-    @characters.setter
-    def characters(self, characters: Dict[str, str]):
-        self._characters = {
+    @persons.setter
+    def persons(self, persons: Dict[str, str]):
+        self._persons = {
             name: {
                 "path": value,
                 "encoding": face_recognition.face_encodings(face_recognition.load_image_file(value))[0],
             }
-            for name, value in characters.items()
+            for name, value in persons.items()
         }
-        self._character_names = list(self._characters.keys())
-        self._character_encodings = [self._characters[name]["encoding"] for name in self._character_names]
+        self._persons_names = list(self._persons.keys())
+        self._persons_encodings = [self._persons[name]["encoding"] for name in self._persons_names]
 
-    def find_character_faces(self, frame: np.ndarray, face_locations: List):
+    def find_person_faces(self, frame: np.ndarray, face_locations: List):
         face_encodings = face_recognition.face_encodings(frame, known_face_locations=face_locations)
         predict_names = []
 
         for i in range(len(face_locations)):
             face_encoding = face_encodings[i]
-            matches = face_recognition.compare_faces(self._character_encodings, face_encoding, tolerance=0.6)
-            face_distances = face_recognition.face_distance(self._character_encodings, face_encoding)
+            matches = face_recognition.compare_faces(self._persons_encodings, face_encoding, tolerance=0.6)
+            face_distances = face_recognition.face_distance(self._persons_encodings, face_encoding)
             best_match_index = np.argmin(face_distances)
 
-            name = "<unk>"
+            name = "#0"
             if matches[best_match_index]:
-                name = self._character_names[best_match_index]
+                name = self._persons_names[best_match_index]
             predict_names.append(name)
         return predict_names
 
@@ -58,7 +58,7 @@ class FaceAnalytics:
         resized_frame_rgb = np.ascontiguousarray(cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB))
 
         face_locations = face_recognition.face_locations(resized_frame_rgb)
-        names = self.find_character_faces(resized_frame_rgb, face_locations)
+        names = self.find_person_faces(resized_frame_rgb, face_locations)
 
         face_landmarks = face_recognition.face_landmarks(resized_frame_rgb, face_locations)
         for landmark in face_landmarks:

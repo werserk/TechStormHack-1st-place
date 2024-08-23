@@ -1,3 +1,3 @@
-from .detector import FaceAnalytics
+from .detector import PersonDetector
 
-__all__ = ["FaceAnalytics"]
+__all__ = ["PersonDetector"]
