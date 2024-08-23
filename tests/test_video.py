@@ -1,4 +1,5 @@
 import os
+import time
 
 import cv2
 
@@ -16,11 +17,18 @@ face_analyzer = FaceAnalytics(
     }
 )
 
+predict_pause_number_frames = 5
+k = 0
+
 while True:
+    start_time = time.time()
     ret, frame = video_capture.read()
-    predictions = face_analyzer(frame)
-    if predictions is None:
-        continue
+
+    if k % predict_pause_number_frames == 0:
+        predictions = face_analyzer(frame)
+        if predictions is None:
+            continue
+    k += 1
 
     names = predictions["names"]
     face_locations = predictions["locations"]
@@ -30,6 +38,8 @@ while True:
         viz.draw_face_bbox(frame, names[i], face_locations[i])
 
     cv2.imshow("Video", frame)
+
+    print(f"Time: {time.time() - start_time:.5f}")
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
