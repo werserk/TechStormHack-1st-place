@@ -141,7 +141,11 @@ files = [
 ]
 
 [package.dependencies]
-numpy = {version = ">=1.26.0", markers = "python_version >= \"3.12\""}
+numpy = [
+    {version = ">=1.23.5", markers = "python_version >= \"3.11\""},
+    {version = ">=1.21.4", markers = "python_version >= \"3.10\" and platform_system == \"Darwin\" and python_version < \"3.11\""},
+    {version = ">=1.21.2", markers = "platform_system != \"Darwin\" and python_version >= \"3.10\" and python_version < \"3.11\""},
+]
 
 [[package]]
 name = "pillow"
@@ -242,5 +246,5 @@ xmp = ["defusedxml"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.12"
-content-hash = "52873501cfa550566e0b79257c0efc7215b4b20f301c2ccaf4f2615ab6a1b593"
+python-versions = ">=3.10, <3.12"
+content-hash = "8cd02669fa3bf0ca0d7fdc5fc62f26388ea8c26525b52517c5ff070dc27a523c"
