@@ -5,9 +5,9 @@ pipeline = Pipeline.from_pretrained(
     use_auth_token="YOUR_HF_TOKEN_HERE",
 )
 
-diarization = pipeline("../data/audio/test_2.wav")
+diarization = pipeline("../data/audio/introduction.wav")
 
 for segment, _, speaker in diarization.itertracks(yield_label=True):
     start_time = segment.start
     end_time = segment.end
-    print(f"Speaker {speaker} speaks from {start_time:.1f}s to {end_time:.1f}s")
+    print(f"{start_time:.1f}-{end_time:.1f}s:{speaker}")
