@@ -6,12 +6,13 @@ import face_recognition
 import numpy as np
 
 import app.video.viz as viz
+from app.people.person import Person
 
 DATA_DIR = "../data"
 
 
 class PersonDetector:
-    def __init__(self, persons: Optional[Dict[str, str]] = None):
+    def __init__(self, persons: Optional[List[Person]] = None):
         self.downscale_factor = 0.2
         self._persons = {}
         self._persons_names = []
@@ -25,15 +26,15 @@ class PersonDetector:
         return self._persons
 
     @persons.setter
-    def persons(self, persons: Optional[Dict[str, str]] = None):
+    def persons(self, persons: Optional[List[Person]] = None):
         if persons is None:
-            persons = {}
+            persons = []
         self._persons = {
-            name: {
-                "path": value,
-                "encoding": face_recognition.face_encodings(face_recognition.load_image_file(value))[0],
+            person.name: {
+                "path": person.image_path,
+                "encoding": face_recognition.face_encodings(face_recognition.load_image_file(person.image_path))[0],
             }
-            for name, value in persons.items()
+            for person in persons
         }
         self._persons_names = list(self._persons.keys())
         self._persons_encodings = [self._persons[name]["encoding"] for name in self._persons_names]
