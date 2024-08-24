@@ -5,3 +5,5 @@ venv_3.10/
 
 data/
 **/realtimesst.log
+app/production/temp.wav
+app/production/temp_video.mp4

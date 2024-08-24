@@ -1,6 +1,5 @@
 import logging
 import os
-from typing import Optional
 
 import cv2
 from moviepy.editor import VideoFileClip, AudioFileClip
@@ -13,6 +12,8 @@ from app.video.detector import PersonDetector
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
+RED_COLOR = (0, 0, 255)
+
 
 class VideoAnalyzer:
     def __init__(self) -> None:
@@ -20,7 +21,8 @@ class VideoAnalyzer:
         self.speaker_classifier = SpeakerClassifier()
         self.person_detector = PersonDetector()
 
-    def convert_video_to_audio(self, video_path: str, temp_audio_path: str) -> None:
+    @staticmethod
+    def convert_video_to_audio(video_path: str, temp_audio_path: str) -> None:
         """Конвертирует видеофайл в аудиофайл."""
         logger.info(f"Converting video to audio...")
         audio = AudioSegment.from_file(video_path, format="mp4")
@@ -33,7 +35,7 @@ class VideoAnalyzer:
         phrases.sort(key=lambda x: x["start"])
         return phrases
 
-    def process_video(self, video_path: str, phrases: list, save_path: Optional[str] = None) -> str:
+    def process_video(self, video_path: str, phrases: list) -> str:
         """Обрабатывает видео, добавляя аннотации и сохраняет результат."""
         logger.info(f"Drawing subtitles...")
 
@@ -56,12 +58,18 @@ class VideoAnalyzer:
 
             current_time = current_frame / fps
 
-            if len(phrases) > 0:
-                speaker = phrases[0]["speaker"]
-                color = self.get_speaker_color(speaker)
-                self.add_annotation_to_frame(frame, speaker, color, font)
-                if current_time >= phrases[0]["end"]:
-                    phrases.pop(0)
+            active_speakers = []
+            i = 0
+            while i < len(phrases):
+                phrase = phrases[i]
+                if phrase["start"] <= current_time <= phrase["end"]:
+                    active_speakers.append(phrase["speaker"])
+                elif current_time > phrase["end"]:
+                    del phrases[i]
+                    i -= 1
+                i += 1
+
+            self.add_annotation_to_frame(frame, ", ".join(active_speakers), RED_COLOR, font)
 
             out_video.write(frame)
             current_frame += 1
@@ -72,16 +80,14 @@ class VideoAnalyzer:
 
         return temp_video_path
 
-    def get_speaker_color(self, speaker: str) -> tuple:
-        """Возвращает цвет аннотации в зависимости от спикера."""
-        return 0, 0, 255
-
-    def add_annotation_to_frame(self, frame, speaker: str, color: tuple, font) -> None:
+    @staticmethod
+    def add_annotation_to_frame(frame, speaker: str, color: tuple, font) -> None:
         """Добавляет аннотацию к кадру."""
         cv2.rectangle(frame, (0, 0), (frame.shape[1], 40), color, -1)
         cv2.putText(frame, speaker, (10, 30), font, 1, (255, 255, 255), 2)
 
-    def merge_audio_and_video(self, video_path: str, audio_path: str, save_path: str) -> None:
+    @staticmethod
+    def merge_audio_and_video(video_path: str, audio_path: str, save_path: str) -> None:
         """Объединяет аудио и видео в один файл."""
         logger.info(f"Merging audio and video...")
 
@@ -91,15 +97,12 @@ class VideoAnalyzer:
         final_clip = video_clip.set_audio(audio_clip)
         final_clip.write_videofile(save_path, codec='libx264', audio_codec='aac')
 
-    def __call__(self, video_path: str, save_path: Optional[str] = None) -> None:
+    def __call__(self, video_path: str, save_path: str) -> None:
         temp_audio_path = "temp.wav"
         self.convert_video_to_audio(video_path, temp_audio_path)
         phrases = self.analyze_speakers(temp_audio_path)
         temp_video_path = self.process_video(video_path, phrases)
-        if save_path:
-            self.merge_audio_and_video(temp_video_path, temp_audio_path, save_path)
-        else:
-            logger.error("Save path is required for merging video and audio.")
+        self.merge_audio_and_video(temp_video_path, temp_audio_path, save_path)
 
 
 if __name__ == "__main__":
