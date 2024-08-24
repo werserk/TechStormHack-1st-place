@@ -1,8 +1,13 @@
+import time
 from typing import Dict, List, Optional
 
 import cv2
 import face_recognition
 import numpy as np
+
+import app.video.viz as viz
+
+DATA_DIR = "../data"
 
 
 class PersonDetector:
@@ -43,7 +48,7 @@ class PersonDetector:
             face_distances = face_recognition.face_distance(self._persons_encodings, face_encoding)
             best_match_index = np.argmin(face_distances)
 
-            name = "#0"
+            name = ""
             if matches[best_match_index]:
                 name = self._persons_names[best_match_index]
             predict_names.append(name)
@@ -74,3 +79,37 @@ class PersonDetector:
             "locations": self.upscale_coords(np.array(face_locations)),
             "landmarks": face_landmarks,
         }
+
+
+def main_loop(face_analyzer: PersonDetector):
+    video_capture = cv2.VideoCapture(0)
+
+    predict_pause_number_frames = 5
+    k = 0
+
+    while True:
+        start_time = time.time()
+        ret, frame = video_capture.read()
+
+        if k % predict_pause_number_frames == 0:
+            predictions = face_analyzer(frame)
+            if predictions is None:
+                continue
+        k += 1
+
+        names = predictions["names"]
+        face_locations = predictions["locations"]
+        face_landmarks = predictions["landmarks"]
+
+        for i in range(len(face_locations)):
+            viz.draw_person_name(frame, names[i], face_locations[i])
+
+        cv2.imshow("Video", frame)
+
+        print(f"Time: {time.time() - start_time:.5f}")
+
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
+    video_capture.release()
+    cv2.destroyAllWindows()

@@ -24,9 +24,10 @@ class TextTranscriber:
         print("Text transcriber initialized.")
 
     def process_detected_text(self, text: str) -> None:
-        new_text = " ".join(self.sentences).strip() + " " + text if len(self.sentences) > 0 else text
+        new_text = "\n".join(self.sentences).strip() + "\n" + text if len(self.sentences) > 0 else text
         if new_text != self.last_message:
             displayed_text = new_text
+            print("\n" * 20)
             print(f"Language: {self.model.detected_language} (realtime: {self.model.detected_realtime_language})")
             print(displayed_text, end="", flush=True)
 
@@ -35,6 +36,7 @@ class TextTranscriber:
         self.process_detected_text("")
 
     def listen(self) -> None:
+        print("\n" * 20)
         print("Listening...")
         while True:
             self.model.text(self.process_text)

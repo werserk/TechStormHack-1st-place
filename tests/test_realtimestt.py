@@ -1,4 +1,4 @@
-from app.audio.text_transcriber import TextTranscriber
+from app.production.model import ProductionModel
 
-model = TextTranscriber()
+model = ProductionModel()
 model.listen()
