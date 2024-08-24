@@ -1,7 +1,8 @@
 from RealtimeSTT import AudioToTextRecorder
+from faster_whisper import WhisperModel
 
 
-class TextTranscriber:
+class TextTranscriberOnline:
     def __init__(self):
         recorder_config = {
             "spinner": False,
@@ -40,3 +41,21 @@ class TextTranscriber:
         print("Listening...")
         while True:
             self.model.text(self.process_text)
+
+
+class TextTranscriberOffline:
+    def __init__(self, model_name: str = "base"):
+        # Загружаем модель Whisper
+        self.model = WhisperModel(model_name, compute_type="int8")
+        print(f"Text transcriber offline initialized with model: {model_name}")
+
+    def transcribe_audio(self, audio_path: str) -> str:
+        """
+        Транскрибирует аудиофайл и возвращает полный текст.
+        """
+        # Выполнение транскрипции
+        segments, _ = self.model.transcribe(audio_path, language="ru", beam_size=3)
+
+        # Объединение всех сегментов в один текст
+        full_text = " ".join(segment.text for segment in segments)
+        return full_text

@@ -1,7 +1,8 @@
 import os
 import warnings
+from typing import List, Dict
 
-from app.audio import TextTranscriber, SpeakerClassifier
+from app.audio import TextTranscriberOnline, SpeakerClassifier
 from app.video import PersonDetector, main_loop
 from app.video.detector import DATA_DIR
 
@@ -11,19 +12,17 @@ DATA_DIR = "../data"
 
 
 class ProductionModel:
-    def __init__(self):
-        self.text_transcriber = TextTranscriber()
+    def __init__(self) -> None:
+        self.text_transcriber = TextTranscriberOnline()
         self.speaker_classifier = SpeakerClassifier()
-        self.person_detector = PersonDetector(
-            persons={
-                "Max": os.path.join(DATA_DIR, "max.jpg"),
-                "Artem": os.path.join(DATA_DIR, "artem.jpg"),
-            }
-        )
+        self.person_detector = PersonDetector()
         print("Production model initialized.")
 
-    def listen(self):
+    def listen(self) -> None:
         self.text_transcriber.listen()
 
-    def watch(self):
+    def watch(self) -> None:
         main_loop(self.person_detector)
+
+    def classify_speakers(self, audio_path: str) -> List[Dict[str, object]]:
+        return self.speaker_classifier(audio_path)
