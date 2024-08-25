@@ -4,6 +4,11 @@ class Person:
         self.surname = surname
         self.image_path = image_path
         self.voices = {}
+        self.metrics = {
+            "constructive": [],
+            "count": 0,
+            "time": [],
+        }
 
     def __str__(self) -> str:
         if self.name and self.surname:

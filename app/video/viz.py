@@ -22,7 +22,7 @@ def draw_person_name(image: Image, name: str, coords: tuple) -> Image:
     )
 
     # Draw text
-    text_position = (right + right_padding, top - top_padding * 3)
+    text_position = (right + right_padding, top - top_padding * 2)
     draw.text(text_position, name, font=FONT, fill=GREEN_COLOR)
     return image
 

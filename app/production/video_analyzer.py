@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List, Dict
+from typing import Dict
 
 import cv2
 import numpy as np
@@ -8,17 +8,18 @@ from PIL import ImageDraw, Image
 from moviepy.editor import VideoFileClip, AudioFileClip
 from pydub import AudioSegment
 from tqdm import tqdm
+from transformers import pipeline
 
 import app.video.viz as viz
 from app.audio.speech_analyzer import SpeechAnalyzer
 from app.production.constants import persons_part2, FONT
-from app.production.metrics import MetricsCalculator
 from app.video.detector import PersonDetector
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
 DATA_DIR = "../data"
+labels = ["constructive", "destructive"]
 
 
 class VideoAnalyzer:
@@ -27,7 +28,7 @@ class VideoAnalyzer:
         self.persons = {person.name: person for person in persons}
         self.speaker_classifier = SpeechAnalyzer()
         self.person_detector = PersonDetector(persons=persons)
-        self.metrics_calculator = MetricsCalculator(persons=persons)
+        self.bert = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
         self.messages = []
 
     @staticmethod
@@ -89,12 +90,15 @@ class VideoAnalyzer:
             current_time = current_frame / fps
 
             active_phrases = self._get_active_phrases(phrases, current_time)
-            count_threshold = 3
             for phrase in active_phrases:
                 if phrase not in self.messages:
+                    if phrase["name"] not in self.persons:
+                        continue
                     self.messages.append(phrase)
-                    if len(self.messages) % count_threshold == 0:
-                        self.metrics_calculator(self.messages[:-count_threshold])
+                    constructive_value = self.bert(phrase["text"], candidate_labels=labels)["scores"][0]
+                    self.persons[phrase["name"]].metrics["constructive"].append(constructive_value)
+                    self.persons[phrase["name"]].metrics["count"] += 1
+
             self._update_persons_voices(frame, active_phrases)
             frame = Image.fromarray(frame)
             frame = self._annotate_frame(frame, active_phrases)
@@ -172,13 +176,18 @@ class VideoAnalyzer:
         final_clip = video_clip.set_audio(audio_clip)
         final_clip.write_videofile(save_path, codec="libx264", audio_codec="aac")
 
-    def __call__(self, video_path: str, save_path: str) -> List[Dict[str, str]]:
+    def __call__(self, video_path: str, save_path: str) -> Dict[str, Dict[str, float]]:
         temp_audio_path = "temp.wav"
         self.convert_video_to_audio(video_path, temp_audio_path)
         phrases = self.analyze_speakers(temp_audio_path)
         temp_video_path = self.process_video(video_path, phrases)
         self.merge_audio_and_video(temp_video_path, temp_audio_path, save_path)
-        return self.metrics_calculator.metrics
+        return {
+            str(person): {
+                "constructive": float(np.mean(person.metrics["constructive"])),
+                "count": person.metrics["count"],
+            } for person in self.persons.values()
+        }
 
 
 def process_test():

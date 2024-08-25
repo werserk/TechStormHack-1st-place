@@ -1,6 +1,6 @@
 # Анализ активности команд по видео 360°
 
-![header.png](.images/header.png)
+![images/header.png](images/header.png)
 
 ## Ссылки
 
