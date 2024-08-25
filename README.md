@@ -52,12 +52,8 @@ virtualenv -p python3 venv && source venv/bin/activate
 poetry install
 ```
 
-Библиотека dlib может устанавливаться долго (5-10 минут) - это нормально, она компилируется.
-Если всё же не удается установить через `poetry` - установите через `pip install dlib`, после опять запустите команду
-выше.
-
 Запуск веб-интерфейса:
 
 ```bash
-streamlit run streamlit_app.py
+streamlit run main.py
 ```
