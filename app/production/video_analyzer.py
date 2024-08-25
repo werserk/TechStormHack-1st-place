@@ -150,8 +150,8 @@ class VideoAnalyzer:
     def add_annotation_to_frame(frame: Image, speaker: str, font) -> Image:
         """Добавляет аннотацию к кадру с использованием PIL для отображения текста."""
         draw = ImageDraw.Draw(frame)
-        draw.rectangle([(0, frame.size[0] - 40), (frame.size[1], frame.size[0])], fill=(0, 0, 0))
-        draw.text((10, 10), speaker, font=font, fill=(255, 255, 255, 0))
+        draw.rectangle([(0, frame.size[1] - 40), (frame.size[0], frame.size[0])], fill=(0, 0, 0))
+        draw.text((0, frame.size[1] - 40), speaker, font=font, fill=(255, 255, 255, 0))
         return frame
 
     @staticmethod
