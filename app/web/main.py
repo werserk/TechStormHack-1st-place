@@ -2,7 +2,6 @@ import os
 import tempfile
 import time
 
-import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -43,7 +42,7 @@ def start_web():
                 ]
                 for i in range(len(list_mertics)):
                     for j in range(len(list_mertics[i])):
-                        if np.isnan(list_mertics[i][j]) or list_mertics[i][j] == 0 or np.isinf(list_mertics[i][j]):
+                        if not list_mertics[i][j]:
                             list_mertics[i][j] = "-"
                 st.dataframe(pd.DataFrame(list_mertics, columns=column_names))
 
