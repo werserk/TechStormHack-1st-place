@@ -4,7 +4,7 @@ import cv2
 import face_recognition
 import numpy as np
 
-from app.people.person import Person
+from app.production.person import Person
 
 DATA_DIR = "../data"
 
