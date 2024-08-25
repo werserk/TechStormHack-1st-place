@@ -1,23 +1,26 @@
-import cv2
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 
 GREEN_COLOR = (0, 255, 0)
-FONT = cv2.FONT_HERSHEY_DUPLEX
 THICKNESS = 2
+fontpath = "../data/font/Montserrat-Regular.ttf"
+FONT = ImageFont.truetype(fontpath, 24)
 
 
-def draw_person_name(frame: np.ndarray, name: str, coords: tuple) -> None:
+def draw_person_name(image: np.array, name: str, coords: tuple) -> np.array:
     top, right, bottom, left = coords
     right_padding = 20
     right_line = 200
     top_padding = 20
 
-    cv2.line(frame, (right, top), (right + right_padding, top - top_padding), GREEN_COLOR, THICKNESS)
-    cv2.line(
-        frame,
-        (right + right_padding, top - top_padding),
-        (right + right_line, top - top_padding),
-        GREEN_COLOR,
-        THICKNESS,
-    )
-    cv2.putText(frame, name, (right + right_padding, top - top_padding * 2), FONT, 1, GREEN_COLOR, THICKNESS)
+    image_pil = Image.fromarray(image)
+    draw = ImageDraw.Draw(image_pil)
+
+    draw.line([(right, top), (right + right_padding, top - top_padding)], fill=GREEN_COLOR, width=THICKNESS)
+    draw.line([(right + right_padding, top - top_padding), (right + right_padding + right_line, top - top_padding)],
+              fill=GREEN_COLOR, width=THICKNESS)
+
+    # Draw text
+    text_position = (right + right_padding, top - top_padding * 3)
+    draw.text(text_position, name, font=FONT, fill=GREEN_COLOR)
+    return np.array(image_pil)

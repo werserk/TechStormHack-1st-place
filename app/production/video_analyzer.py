@@ -2,7 +2,8 @@ import logging
 import os
 
 import cv2
-from PIL import ImageFont
+import numpy as np
+from PIL import ImageFont, ImageDraw, Image
 from moviepy.editor import VideoFileClip, AudioFileClip
 from pydub import AudioSegment
 
@@ -12,27 +13,40 @@ from app.audio.text_transcriber import TextTranscriberOffline
 from app.people.person import Person
 from app.video.detector import PersonDetector
 
-fontpath = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-FONT = ImageFont.truetype(fontpath, 32)
+fontpath = "../data/font/Montserrat-Regular.ttf"
+FONT = ImageFont.truetype(fontpath, 24)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
-RED_COLOR = (0, 0, 255)
+GREEN_COLOR = (0, 255, 0)
 
 DATA_DIR = "../data"
+
+persons_part1 = [
+    Person("Александр", "Пушной", os.path.join(DATA_DIR, "Александр_Пушной.png")),
+    Person("Алексей", "Вершинин", os.path.join(DATA_DIR, "Алексей_Вершинин.jpg")),
+    Person("Андрей", "Ургант", os.path.join(DATA_DIR, "Андрей_Ургант.png")),
+    Person("Дмитрий", "Колдун", os.path.join(DATA_DIR, "Дмитрий_Колдун.jpg")),
+    Person("Евгений", "Папунаишвили", os.path.join(DATA_DIR, "Евгений_Папунаишвили.jpg")),
+    Person("Евгений", "Рыбов", os.path.join(DATA_DIR, "Евгений_Рыбов.jpg")),
+]
+
+part2_dir = os.path.join(DATA_DIR, "part2")
+
+persons_part2 = [
+    Person("Джиган", "", os.path.join(part2_dir, "Джиган.png")),
+    Person("Ведущий", "", os.path.join(part2_dir, "Ведущий.png")),
+    Person("М1", "", os.path.join(part2_dir, "М1.png")),
+    Person("Леди1", "", os.path.join(part2_dir, "Леди1.png")),
+    Person("Пушной", "", os.path.join(part2_dir, "Пушной.png")),
+    Person("Леди2", "", os.path.join(part2_dir, "Леди2.png")),
+]
 
 
 class VideoAnalyzer:
     def __init__(self) -> None:
-        persons = [
-            Person("Александр", "Пушной", os.path.join(DATA_DIR, "Александр_Пушной.png")),
-            Person("Алексей", "Вершинин", os.path.join(DATA_DIR, "Алексей_Вершинин.jpg")),
-            Person("Андрей", "Ургант", os.path.join(DATA_DIR, "Андрей_Ургант.png")),
-            Person("Дмитрий", "Колдун", os.path.join(DATA_DIR, "Дмитрий_Колдун.jpg")),
-            Person("Евгений", "Папунаишвили", os.path.join(DATA_DIR, "Евгений_Папунаишвили.jpg")),
-            Person("Евгений", "Рыбов", os.path.join(DATA_DIR, "Евгений_Рыбов.jpg")),
-        ]
+        persons = persons_part2
         self.persons = {person.name: person for person in persons}
         self.transcriber = TextTranscriberOffline()
         self.speaker_classifier = SpeakerClassifier()
@@ -42,7 +56,7 @@ class VideoAnalyzer:
     def convert_video_to_audio(video_path: str, temp_audio_path: str) -> None:
         """Конвертирует видеофайл в аудиофайл."""
         logger.info(f"Converting video to audio...")
-        audio = AudioSegment.from_file(video_path, format="mp4")
+        audio = AudioSegment.from_file(video_path, format=video_path.split(".")[-1])
         audio.export(temp_audio_path, format="wav")
 
     def analyze_speakers(self, audio_path: str):
@@ -89,21 +103,26 @@ class VideoAnalyzer:
             names = faces["names"]
             if len(names) == 1 and len(active_speakers) == 1:
                 name = names[0]
-                speaker = list(active_speakers)[0]
-                if speaker in self.persons[name].voices:
-                    self.persons[name].voices[speaker] += 1
-                else:
-                    self.persons[name].voices[speaker] = 1
+                if name != PersonDetector.UNKNOWN_NAME:
+                    speaker = list(active_speakers)[0]
+                    if speaker in self.persons[name].voices:
+                        self.persons[name].voices[speaker] += 1
+                    else:
+                        self.persons[name].voices[speaker] = 1
 
             speaker_names = set()
             for speaker in active_speakers:
-                best_match_voice_person = max(self.persons.values(),
-                                              key=lambda x: x.voices[speaker] if speaker in x.voices else 0)
-                speaker_names.add(best_match_voice_person.name)
+                best_match_voice_person = max(
+                    self.persons.values(), key=lambda x: x.voices[speaker] if speaker in x.voices else 0
+                )
+                if speaker in best_match_voice_person.voices:
+                    speaker_names.add(best_match_voice_person.name)
+                else:
+                    speaker_names.add(speaker)
 
-            self.add_annotation_to_frame(frame, ", ".join(list(speaker_names)), RED_COLOR, FONT)
+            self.add_annotation_to_frame(frame, ", ".join(list(speaker_names)), GREEN_COLOR, FONT)
             for i in range(len(faces["names"])):
-                viz.draw_person_name(frame, names[i], faces["locations"][i])
+                frame = viz.draw_person_name(frame, names[i], faces["locations"][i])
 
             out_video.write(frame)
             current_frame += 1
@@ -116,9 +135,19 @@ class VideoAnalyzer:
 
     @staticmethod
     def add_annotation_to_frame(frame, speaker: str, color: tuple, font) -> None:
-        """Добавляет аннотацию к кадру."""
-        cv2.rectangle(frame, (0, 0), (frame.shape[1], 40), color, -1)
-        cv2.putText(frame, speaker, (10, 30), font, 1, (255, 255, 255), 2)
+        """Добавляет аннотацию к кадру с использованием PIL для отображения текста."""
+        # Конвертируем изображение из формата OpenCV в формат PIL
+        pil_img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        draw = ImageDraw.Draw(pil_img)
+
+        # Рисуем прямоугольник для фона текста
+        draw.rectangle([(0, frame.shape[0] - 40), (frame.shape[1], frame.shape[0])], fill=(0, 0, 0))
+
+        # Рисуем текст на изображении
+        draw.text((10, 10), speaker, font=font, fill=(255, 255, 255, 0))
+
+        # Конвертируем изображение обратно в формат OpenCV
+        frame[:] = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
 
     @staticmethod
     def merge_audio_and_video(video_path: str, audio_path: str, save_path: str) -> None:
@@ -129,7 +158,7 @@ class VideoAnalyzer:
         audio_clip = AudioFileClip(audio_path)
 
         final_clip = video_clip.set_audio(audio_clip)
-        final_clip.write_videofile(save_path, codec='libx264', audio_codec='aac')
+        final_clip.write_videofile(save_path, codec="libx264", audio_codec="aac")
 
     def __call__(self, video_path: str, save_path: str) -> None:
         temp_audio_path = "temp.wav"
@@ -139,7 +168,29 @@ class VideoAnalyzer:
         self.merge_audio_and_video(temp_video_path, temp_audio_path, save_path)
 
 
-if __name__ == "__main__":
-    video_path = "../../data/video/test_001.mp4"
+def process_test():
+    video_path = "../../data/video/test_1_min.mp4"
     analyzer = VideoAnalyzer()
-    analyzer(video_path, save_path="../../data/video/test_001_output.mp4")
+    analyzer(video_path, save_path="../../data/video/test_1_min_output.mp4")
+
+
+def process_our_video():
+    video_path = "/home/werserk/ours_test.mp4"
+    analyzer = VideoAnalyzer()
+    analyzer(video_path, save_path="../../data/video/test_ours_output.mp4")
+
+
+def process_final():
+    video_path = "../../data/video/final.mp4"
+    analyzer = VideoAnalyzer()
+    analyzer(video_path, save_path="../../data/predicts/final.mp4")
+
+
+def process_part_final():
+    video_path = "../../data/video/final_360-380.mp4"
+    analyzer = VideoAnalyzer()
+    analyzer(video_path, save_path="../../data/predicts/final_360-380.mp4")
+
+
+if __name__ == "__main__":
+    process_part_final()

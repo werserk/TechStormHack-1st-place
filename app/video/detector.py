@@ -12,8 +12,10 @@ DATA_DIR = "../data"
 
 
 class PersonDetector:
+    UNKNOWN_NAME = "Неопознанный"
+
     def __init__(self, persons: Optional[List[Person]] = None):
-        self.downscale_factor = 0.2
+        self.downscale_factor = 0.5
         self._persons = {}
         self._persons_names = []
         self._persons_encodings = []
@@ -39,18 +41,17 @@ class PersonDetector:
         self._persons_names = list(self._persons.keys())
         self._persons_encodings = [self._persons[name]["encoding"] for name in self._persons_names]
 
-    def find_person_faces(self, frame: np.ndarray, face_locations: List):
+    def find_person_faces(self, frame: np.ndarray, face_locations: List, threshold: float = 0.6):
         face_encodings = face_recognition.face_encodings(frame, known_face_locations=face_locations)
         predict_names = []
 
         for i in range(len(face_locations)):
             face_encoding = face_encodings[i]
-            matches = face_recognition.compare_faces(self._persons_encodings, face_encoding, tolerance=0.6)
             face_distances = face_recognition.face_distance(self._persons_encodings, face_encoding)
             best_match_index = np.argmin(face_distances)
 
-            name = ""
-            if matches[best_match_index]:
+            name = self.UNKNOWN_NAME
+            if face_distances[best_match_index] < threshold:
                 name = self._persons_names[best_match_index]
             predict_names.append(name)
         return predict_names
