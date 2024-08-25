@@ -22,6 +22,7 @@ def draw_person_name(image: Image, name: str, coords: tuple) -> Image:
         width=THICKNESS,
     )
 
+    # Draw text
     text_position = (right + right_padding, top - top_padding * 3)
     draw.text(text_position, name, font=FONT, fill=GREEN_COLOR)
     return image

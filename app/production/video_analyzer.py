@@ -109,6 +109,7 @@ class VideoAnalyzer:
             self._update_persons_voices(frame, active_phrases)
             frame = Image.fromarray(frame)
             frame = self._annotate_frame(frame, active_phrases)
+            frame = np.array(frame)
             frame = self._draw_faces(frame)
 
             out_video.write(frame)
@@ -158,16 +159,16 @@ class VideoAnalyzer:
         """Рисует имена людей на кадре."""
         faces = self.person_detector(frame)
         names = faces["names"]
-
+        frame = Image.fromarray(frame)
         for i in range(len(faces["names"])):
             frame = viz.draw_person_name(frame, names[i], faces["locations"][i])
-        return frame
+        return np.array(frame)
 
     @staticmethod
     def add_annotation_to_frame(frame: Image, speaker: str, font) -> Image:
         """Добавляет аннотацию к кадру с использованием PIL для отображения текста."""
         draw = ImageDraw.Draw(frame)
-        draw.rectangle([(0, frame.shape[0] - 40), (frame.shape[1], frame.shape[0])], fill=(0, 0, 0))
+        draw.rectangle([(0, frame.size[0] - 40), (frame.size[1], frame.size[0])], fill=(0, 0, 0))
         draw.text((10, 10), speaker, font=font, fill=(255, 255, 255, 0))
         return frame
 
