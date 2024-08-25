@@ -1,6 +1,7 @@
 import logging
 from typing import List, Dict, Union
 
+import torch
 from pyannote.audio import Pipeline
 from tqdm import tqdm
 
@@ -14,6 +15,8 @@ class SpeechAnalyzer:
             "pyannote/speaker-diarization-3.1",
             use_auth_token="YOUR_HF_TOKEN_HERE",
         )
+        if torch.cuda.is_available():
+            self.model.to(torch.device(0))
         self.transcriber = TextTranscriber()
 
     def __call__(self, audio_data: str) -> List[Dict[str, Union[str, float]]]:
@@ -21,7 +24,7 @@ class SpeechAnalyzer:
         diarization = self.model(audio_data)
         idx = 0
         for segment, _, speaker in tqdm(
-            diarization.itertracks(yield_label=True), total=len(diarization), desc="Speech transcribition"
+                diarization.itertracks(yield_label=True), total=len(diarization), desc="Speech transcribition"
         ):
             start_time = segment.start
             end_time = segment.end
