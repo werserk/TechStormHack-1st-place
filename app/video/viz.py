@@ -1,10 +1,9 @@
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
-GREEN_COLOR = (0, 255, 0)
+from app.production.constants import FONT, GREEN_COLOR
+
 THICKNESS = 2
-fontpath = "../data/font/Montserrat-Regular.ttf"
-FONT = ImageFont.truetype(fontpath, 24)
 
 
 def draw_person_name(image: Image, name: str, coords: tuple) -> Image:

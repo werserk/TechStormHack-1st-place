@@ -3,61 +3,44 @@ import os
 
 import cv2
 import numpy as np
-from PIL import ImageFont, ImageDraw, Image
+from PIL import ImageDraw, Image
 from moviepy.editor import VideoFileClip, AudioFileClip
 from pydub import AudioSegment
 from tqdm import tqdm
 
 import app.video.viz as viz
-from app.audio.speaker_classifier import SpeakerClassifier
-from app.people.person import Person
+from app.audio.speech_analyzer import SpeechAnalyzer
+from app.llm.yandexgpt import YandexGPTSession
+from app.production.constants import persons_part2, BASIC_SYSTEM_PROMPT, FONT, YandexGPTConfig
 from app.video.detector import PersonDetector
-
-fontpath = "../data/font/Montserrat-Regular.ttf"
-FONT = ImageFont.truetype(fontpath, 12)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
-GREEN_COLOR = (0, 255, 0)
 DATA_DIR = "../data"
-
-persons_part1 = [
-    Person("Александр", "Пушной", os.path.join(DATA_DIR, "Александр_Пушной.png")),
-    Person("Алексей", "Вершинин", os.path.join(DATA_DIR, "Алексей_Вершинин.jpg")),
-    Person("Андрей", "Ургант", os.path.join(DATA_DIR, "Андрей_Ургант.png")),
-    Person("Дмитрий", "Колдун", os.path.join(DATA_DIR, "Дмитрий_Колдун.jpg")),
-    Person("Евгений", "Папунаишвили", os.path.join(DATA_DIR, "Евгений_Папунаишвили.jpg")),
-    Person("Евгений", "Рыбов", os.path.join(DATA_DIR, "Евгений_Рыбов.jpg")),
-]
-
-part2_dir = os.path.join(DATA_DIR, "part2")
-
-persons_part2 = [
-    Person("Джиган", "", os.path.join(part2_dir, "Джиган.png")),
-    Person("Ведущий", "", os.path.join(part2_dir, "Ведущий.png")),
-    Person("М1", "", os.path.join(part2_dir, "М1.png")),
-    Person("Леди1", "", os.path.join(part2_dir, "Леди1.png")),
-    Person("Пушной", "", os.path.join(part2_dir, "Пушной.png")),
-    Person("Леди2", "", os.path.join(part2_dir, "Леди2.png")),
-]
 
 
 class VideoAnalyzer:
     def __init__(self) -> None:
         persons = persons_part2
         self.persons = {person.name: person for person in persons}
-        self.speaker_classifier = SpeakerClassifier()
+        self.speaker_classifier = SpeechAnalyzer()
         self.person_detector = PersonDetector(persons=persons)
+        self.gpt = YandexGPTSession(api_key=YandexGPTConfig.api_key,
+                                    system_prompt=BASIC_SYSTEM_PROMPT)
+        self.messages = []
 
     @staticmethod
     def convert_video_to_audio(video_path: str, temp_audio_path: str) -> None:
         """Конвертирует видеофайл в аудиофайл."""
         logger.info(f"Converting video to audio...")
-        audio = AudioSegment.from_file(video_path, format=video_path.split(".")[-1])
+        try:
+            audio = AudioSegment.from_file(video_path, format="mp4")
+        except ValueError:
+            audio = AudioSegment.from_file(video_path, format=video_path.split(".")[-1])
         audio.export(temp_audio_path, format="wav")
 
-    def analyze_speakers(self, audio_path: str):
+    def analyze_speakers(self, audio_path: str) -> list:
         """Анализирует аудио и возвращает фразы со временем и спикерами."""
         logger.info(f"Analyzing speakers...")
         phrases = self.speaker_classifier(audio_path)
@@ -116,7 +99,7 @@ class VideoAnalyzer:
             current_frame += 1
             tqdm_bar.update(1)
 
-    def _get_active_phrases(self, phrases, current_time):
+    def _get_active_phrases(self, phrases: list, current_time: float) -> list:
         """Возвращает активные фразы для текущего времени."""
         active_phrases = []
         i = 0
@@ -130,7 +113,7 @@ class VideoAnalyzer:
             i += 1
         return active_phrases
 
-    def _update_persons_voices(self, frame, active_phrases):
+    def _update_persons_voices(self, frame: np.ndarray, active_phrases: list) -> None:
         """Обновляет голоса для известных персон."""
         faces = self.person_detector(frame)
         names = faces["names"]

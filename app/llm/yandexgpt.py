@@ -33,18 +33,3 @@ class YandexGPTSession:
         else:
             print("Error:", response.status_code, response.text)
             return None
-
-
-# Пример использования класса
-api_key = "YOUR_API_KEY_HERE"
-system_prompt = "Ты ассистент дроид, способный помочь в галактических приключениях."
-
-# Создаем объект YandexGPTSession с системным промптом
-session = YandexGPTSession(api_key, system_prompt)
-
-# Отправляем новый запрос
-user_message = "Какова структура светового меча?"
-response = session.send_message(user_message)
-
-if response:
-    print("Ответ:", response)

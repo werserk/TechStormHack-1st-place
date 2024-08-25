@@ -7,3 +7,7 @@ data/
 **/realtimesst.log
 app/production/temp.wav
 app/production/temp_video.mp4
+
+temp_video.mp4
+temp.wav
+*.mp4
