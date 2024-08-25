@@ -13,7 +13,7 @@ services:
     #        image: submit:latest
 
     command: >
-      bash -c "python loop.py"
+      bash -c "streamlit run main.py"
 
 #            bash -c "python submit.py"
 
