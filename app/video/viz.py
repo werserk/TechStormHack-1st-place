@@ -7,14 +7,13 @@ fontpath = "../data/font/Montserrat-Regular.ttf"
 FONT = ImageFont.truetype(fontpath, 24)
 
 
-def draw_person_name(image: np.array, name: str, coords: tuple) -> np.array:
+def draw_person_name(image: Image, name: str, coords: tuple) -> Image:
     top, right, bottom, left = coords
     right_padding = 20
     right_line = 200
     top_padding = 20
 
-    image_pil = Image.fromarray(image)
-    draw = ImageDraw.Draw(image_pil)
+    draw = ImageDraw.Draw(image)
 
     draw.line([(right, top), (right + right_padding, top - top_padding)], fill=GREEN_COLOR, width=THICKNESS)
     draw.line(
@@ -23,10 +22,9 @@ def draw_person_name(image: np.array, name: str, coords: tuple) -> np.array:
         width=THICKNESS,
     )
 
-    # Draw text
     text_position = (right + right_padding, top - top_padding * 3)
     draw.text(text_position, name, font=FONT, fill=GREEN_COLOR)
-    return np.array(image_pil)
+    return image
 
 
 def draw_landmarks(image: np.array, landmarks: dict) -> np.array:

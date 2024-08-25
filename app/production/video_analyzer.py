@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
 GREEN_COLOR = (0, 255, 0)
-
 DATA_DIR = "../data"
 
 persons_part1 = [
@@ -69,19 +68,33 @@ class VideoAnalyzer:
         """Обрабатывает видео, добавляя аннотации и сохраняет результат."""
         logger.info(f"Drawing subtitles...")
 
+        temp_video_path = "temp_video.mp4"
+
+        cap, out_video, fps, frame_width, frame_height = self._initialize_video_processing(video_path, temp_video_path)
+
+        self._process_frames(cap, out_video, fps, phrases)
+
+        cap.release()
+        out_video.release()
+        cv2.destroyAllWindows()
+
+        return temp_video_path
+
+    def _initialize_video_processing(self, video_path: str, temp_video_path: str):
+        """Инициализирует захват видео и видео писатель."""
         cap = cv2.VideoCapture(video_path)
         fps = cap.get(cv2.CAP_PROP_FPS)
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        temp_video_path = "temp_video.mp4"
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         out_video = cv2.VideoWriter(temp_video_path, fourcc, fps, (frame_width, frame_height))
 
+        return cap, out_video, fps, frame_width, frame_height
+
+    def _process_frames(self, cap, out_video, fps, phrases):
+        """Обрабатывает кадры и добавляет аннотации."""
         current_frame = 0
-
-        logging.info("Drawing new frames...")
-
         total_cap_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
         tqdm_bar = tqdm(total=total_cap_frames, desc="Processing video")
 
@@ -92,78 +105,71 @@ class VideoAnalyzer:
 
             current_time = current_frame / fps
 
-            active_phrases = []
-            i = 0
-            while i < len(phrases):
-                phrase = phrases[i]
-                if phrase["start"] <= current_time <= phrase["end"]:
-                    active_phrases.append(phrase)
-                elif current_time > phrase["end"]:
-                    del phrases[i]
-                    i -= 1
-                i += 1
-
-            faces = self.person_detector(frame)
-            names = faces["names"]
-            if len(names) == 1 and len(active_phrases) == 1:
-                name = names[0]
-                speaker = list(active_phrases)[0]["speaker"]
-                if name != PersonDetector.UNKNOWN_NAME:
-                    if speaker in self.persons[name].voices:
-                        self.persons[name].voices[speaker] += 1
-                    else:
-                        self.persons[name].voices[speaker] = 1
-                # else:
-                #     face = faces["locations"][0]
-                #     top, right, bottom, left = face
-                #     face_image = frame[top:bottom, left:right]
-                #     cv2.imshow("Face", face_image)
-                #     cv2.waitKey(0)
-                #     self.persons[speaker] = Person(speaker, "", "")
-
-            for i in range(len(active_phrases)):
-                phrase = active_phrases[i]
-                speaker = phrase["speaker"]
-                best_match_voice_person = max(
-                    self.persons.values(), key=lambda x: x.voices[speaker] if speaker in x.voices else 0
-                )
-                if speaker in best_match_voice_person.voices:
-                    phrase["name"] = best_match_voice_person.name
-                else:
-                    phrase["name"] = speaker
-
-            viz_text = "\n".join([f"{phrase['name']}: {phrase['text']}" for phrase in active_phrases])
-            self.add_annotation_to_frame(frame, viz_text, GREEN_COLOR, FONT)
-
-            for i in range(len(faces["names"])):
-                frame = viz.draw_person_name(frame, names[i], faces["locations"][i])
-                # frame = viz.draw_landmarks(frame, faces["landmarks"][i])
+            active_phrases = self._get_active_phrases(phrases, current_time)
+            self._update_persons_voices(frame, active_phrases)
+            frame = Image.fromarray(frame)
+            frame = self._annotate_frame(frame, active_phrases)
+            frame = self._draw_faces(frame)
 
             out_video.write(frame)
             current_frame += 1
             tqdm_bar.update(1)
 
-        cap.release()
-        out_video.release()
-        cv2.destroyAllWindows()
+    def _get_active_phrases(self, phrases, current_time):
+        """Возвращает активные фразы для текущего времени."""
+        active_phrases = []
+        i = 0
+        while i < len(phrases):
+            phrase = phrases[i]
+            if phrase["start"] <= current_time <= phrase["end"]:
+                active_phrases.append(phrase)
+            elif current_time > phrase["end"]:
+                del phrases[i]
+                i -= 1
+            i += 1
+        return active_phrases
 
-        return temp_video_path
+    def _update_persons_voices(self, frame, active_phrases):
+        """Обновляет голоса для известных персон."""
+        faces = self.person_detector(frame)
+        names = faces["names"]
+
+        if len(names) == 1 and len(active_phrases) == 1:
+            name = names[0]
+            speaker = list(active_phrases)[0]["speaker"]
+            if name != PersonDetector.UNKNOWN_NAME:
+                if speaker in self.persons[name].voices:
+                    self.persons[name].voices[speaker] += 1
+                else:
+                    self.persons[name].voices[speaker] = 1
+
+        for i in range(len(active_phrases)):
+            phrase = active_phrases[i]
+            speaker = phrase["speaker"]
+            best_match_voice_person = max(self.persons.values(), key=lambda x: x.voices.get(speaker, 0))
+            phrase["name"] = best_match_voice_person.name if speaker in best_match_voice_person.voices else speaker
+
+    def _annotate_frame(self, frame: Image, active_phrases: list) -> Image:
+        """Добавляет аннотации к кадру."""
+        viz_text = "\n".join([f"{phrase['name']}: {phrase['text']}" for phrase in active_phrases])
+        return self.add_annotation_to_frame(frame, viz_text, FONT)
+
+    def _draw_faces(self, frame: np.ndarray) -> np.ndarray:
+        """Рисует имена людей на кадре."""
+        faces = self.person_detector(frame)
+        names = faces["names"]
+
+        for i in range(len(faces["names"])):
+            frame = viz.draw_person_name(frame, names[i], faces["locations"][i])
+        return frame
 
     @staticmethod
-    def add_annotation_to_frame(frame, speaker: str, color: tuple, font) -> None:
+    def add_annotation_to_frame(frame: Image, speaker: str, font) -> Image:
         """Добавляет аннотацию к кадру с использованием PIL для отображения текста."""
-        # Конвертируем изображение из формата OpenCV в формат PIL
-        pil_img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        draw = ImageDraw.Draw(pil_img)
-
-        # Рисуем прямоугольник для фона текста
+        draw = ImageDraw.Draw(frame)
         draw.rectangle([(0, frame.shape[0] - 40), (frame.shape[1], frame.shape[0])], fill=(0, 0, 0))
-
-        # Рисуем текст на изображении
         draw.text((10, 10), speaker, font=font, fill=(255, 255, 255, 0))
-
-        # Конвертируем изображение обратно в формат OpenCV
-        frame[:] = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+        return frame
 
     @staticmethod
     def merge_audio_and_video(video_path: str, audio_path: str, save_path: str) -> None:
