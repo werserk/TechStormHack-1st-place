@@ -4,6 +4,7 @@ __pycache__/
 venv_3.10/
 
 data/
+!app/data/*
 **/realtimesst.log
 app/production/temp.wav
 app/production/temp_video.mp4

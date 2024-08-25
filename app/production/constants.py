@@ -70,10 +70,10 @@ part2_dir = os.path.join(DATA_DIR, "part2")
 persons_part2 = [
     Person("Джиган", "", os.path.join(part2_dir, "Джиган.png")),
     Person("Ведущий", "", os.path.join(part2_dir, "Ведущий.png")),
-    Person("М1", "", os.path.join(part2_dir, "М1.png")),
-    Person("Леди1", "", os.path.join(part2_dir, "Леди1.png")),
+    Person("Сафронов", "", os.path.join(part2_dir, "Сафронов.png")),
+    Person("Шелест", "", os.path.join(part2_dir, "Шелест.png")),
     Person("Пушной", "", os.path.join(part2_dir, "Пушной.png")),
-    Person("Леди2", "", os.path.join(part2_dir, "Леди2.png")),
+    Person("Николаева", "", os.path.join(part2_dir, "Николаева.png")),
 ]
 
 fontpath = os.path.join(DATA_DIR, "font/Montserrat-Regular.ttf")
