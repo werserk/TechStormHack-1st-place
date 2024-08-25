@@ -9,7 +9,7 @@ from pydub import AudioSegment
 class TextTranscriber:
     def __init__(self, model_name: str = "base"):
         logging.info("Initializing TextTranscriber...")
-        self.model = WhisperModel(model_name, compute_type="int8")
+        self.model = WhisperModel(model_name, compute_type="float16")
 
     def _extract_audio_segment(self, audio_path: str, start_time: float, end_time: float) -> str:
         """
