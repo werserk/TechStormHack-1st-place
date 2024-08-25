@@ -90,6 +90,8 @@ class VideoAnalyzer:
             current_time = current_frame / fps
 
             active_phrases = self._get_active_phrases(phrases, current_time)
+            self._update_persons_voices(frame, active_phrases)
+
             for phrase in active_phrases:
                 if phrase not in self.messages:
                     if phrase["name"] not in self.persons:
@@ -99,7 +101,6 @@ class VideoAnalyzer:
                     self.persons[phrase["name"]].metrics["constructive"].append(constructive_value)
                     self.persons[phrase["name"]].metrics["count"] += 1
 
-            self._update_persons_voices(frame, active_phrases)
             frame = Image.fromarray(frame)
             frame = self._annotate_frame(frame, active_phrases)
             frame = np.array(frame)
