@@ -217,5 +217,11 @@ def process_part_final():
     analyzer(video_path, save_path="../../data/predicts/final_360-380.mp4")
 
 
+def process_part_final_2():
+    video_path = "../../data/video/final_200-210.mp4"
+    analyzer = VideoAnalyzer()
+    analyzer(video_path, save_path="../../data/predicts/final_200-210.mp4")
+
+
 if __name__ == "__main__":
-    process_part_final()
+    process_part_final_2()
