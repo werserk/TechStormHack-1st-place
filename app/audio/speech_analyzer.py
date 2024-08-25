@@ -17,7 +17,7 @@ class SpeechAnalyzer:
         )
         if torch.cuda.is_available():
             self.model.to(torch.device(0))
-        self.transcriber = TextTranscriber()
+        self.transcriber = TextTranscriber(model_name="large-v3")
 
     def __call__(self, audio_data: str) -> List[Dict[str, Union[str, float]]]:
         diarization_data = []
