@@ -186,7 +186,7 @@ class VideoAnalyzer:
         return {
             str(person): {
                 "constructive": float(np.mean(person.metrics["constructive"])),
-                "count": person.metrics["count"],
+                "initiative": person.metrics["count"],
                 "IPC": np.log2(person.metrics["count"]) * float(np.mean(person.metrics["constructive"])),
             }
             for person in self.persons.values()

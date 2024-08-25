@@ -2,6 +2,8 @@ import os
 import tempfile
 import time
 
+import numpy as np
+import pandas as pd
 import streamlit as st
 
 from app.production import VideoAnalyzer
@@ -34,7 +36,16 @@ def start_web():
                 metrics = video_analyzer(video_path, output_path)
 
             with st.expander("Результат обработки"):
-                st.write(metrics)
+                column_names = ["Имя", "Конструктивность", "Инициативность", "ИПК"]
+                list_mertics = [
+                    [name, metrics[name]["constructive"], metrics[name]["initiative"], metrics[name]["IPC"]]
+                    for name in metrics.keys()
+                ]
+                for i in range(len(list_mertics)):
+                    for j in range(len(list_mertics[i])):
+                        if np.isnan(list_mertics[i][j]) or list_mertics[i][j] == 0 or np.isinf(list_mertics[i][j]):
+                            list_mertics[i][j] = "-"
+                st.dataframe(pd.DataFrame(list_mertics, columns=column_names))
 
             # download
             st.download_button("Скачать видео", output_path, file_name=f"{time.strftime('%Y-%m-%d_%H-%M-%S')}.mp4")
