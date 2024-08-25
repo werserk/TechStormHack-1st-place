@@ -21,7 +21,6 @@ class PersonDetector:
         self._persons_encodings = []
         if persons is not None:
             self.persons = persons
-        print("Person detector initialized.")
 
     @property
     def persons(self):

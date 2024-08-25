@@ -17,8 +17,11 @@ def draw_person_name(image: np.array, name: str, coords: tuple) -> np.array:
     draw = ImageDraw.Draw(image_pil)
 
     draw.line([(right, top), (right + right_padding, top - top_padding)], fill=GREEN_COLOR, width=THICKNESS)
-    draw.line([(right + right_padding, top - top_padding), (right + right_padding + right_line, top - top_padding)],
-              fill=GREEN_COLOR, width=THICKNESS)
+    draw.line(
+        [(right + right_padding, top - top_padding), (right + right_padding + right_line, top - top_padding)],
+        fill=GREEN_COLOR,
+        width=THICKNESS,
+    )
 
     # Draw text
     text_position = (right + right_padding, top - top_padding * 3)

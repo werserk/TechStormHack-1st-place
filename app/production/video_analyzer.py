@@ -6,15 +6,15 @@ import numpy as np
 from PIL import ImageFont, ImageDraw, Image
 from moviepy.editor import VideoFileClip, AudioFileClip
 from pydub import AudioSegment
+from tqdm import tqdm
 
 import app.video.viz as viz
 from app.audio.speaker_classifier import SpeakerClassifier
-from app.audio.text_transcriber import TextTranscriberOffline
 from app.people.person import Person
 from app.video.detector import PersonDetector
 
 fontpath = "../data/font/Montserrat-Regular.ttf"
-FONT = ImageFont.truetype(fontpath, 24)
+FONT = ImageFont.truetype(fontpath, 12)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
@@ -48,7 +48,6 @@ class VideoAnalyzer:
     def __init__(self) -> None:
         persons = persons_part2
         self.persons = {person.name: person for person in persons}
-        self.transcriber = TextTranscriberOffline()
         self.speaker_classifier = SpeakerClassifier()
         self.person_detector = PersonDetector(persons=persons)
 
@@ -81,6 +80,11 @@ class VideoAnalyzer:
 
         current_frame = 0
 
+        logging.info("Drawing new frames...")
+
+        total_cap_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        tqdm_bar = tqdm(total=total_cap_frames, desc="Processing video")
+
         while True:
             ret, frame = cap.read()
             if not ret:
@@ -88,12 +92,12 @@ class VideoAnalyzer:
 
             current_time = current_frame / fps
 
-            active_speakers = set()
+            active_phrases = []
             i = 0
             while i < len(phrases):
                 phrase = phrases[i]
                 if phrase["start"] <= current_time <= phrase["end"]:
-                    active_speakers.add(phrase["speaker"])
+                    active_phrases.append(phrase)
                 elif current_time > phrase["end"]:
                     del phrases[i]
                     i -= 1
@@ -101,9 +105,9 @@ class VideoAnalyzer:
 
             faces = self.person_detector(frame)
             names = faces["names"]
-            if len(names) == 1 and len(active_speakers) == 1:
+            if len(names) == 1 and len(active_phrases) == 1:
                 name = names[0]
-                speaker = list(active_speakers)[0]
+                speaker = list(active_phrases)[0]["speaker"]
                 if name != PersonDetector.UNKNOWN_NAME:
                     if speaker in self.persons[name].voices:
                         self.persons[name].voices[speaker] += 1
@@ -117,23 +121,27 @@ class VideoAnalyzer:
                 #     cv2.waitKey(0)
                 #     self.persons[speaker] = Person(speaker, "", "")
 
-            speaker_names = set()
-            for speaker in active_speakers:
+            for i in range(len(active_phrases)):
+                phrase = active_phrases[i]
+                speaker = phrase["speaker"]
                 best_match_voice_person = max(
                     self.persons.values(), key=lambda x: x.voices[speaker] if speaker in x.voices else 0
                 )
                 if speaker in best_match_voice_person.voices:
-                    speaker_names.add(best_match_voice_person.name)
+                    phrase["name"] = best_match_voice_person.name
                 else:
-                    speaker_names.add(speaker)
+                    phrase["name"] = speaker
 
-            self.add_annotation_to_frame(frame, ", ".join(list(speaker_names)), GREEN_COLOR, FONT)
+            viz_text = "\n".join([f"{phrase['name']}: {phrase['text']}" for phrase in active_phrases])
+            self.add_annotation_to_frame(frame, viz_text, GREEN_COLOR, FONT)
+
             for i in range(len(faces["names"])):
                 frame = viz.draw_person_name(frame, names[i], faces["locations"][i])
                 # frame = viz.draw_landmarks(frame, faces["landmarks"][i])
 
             out_video.write(frame)
             current_frame += 1
+            tqdm_bar.update(1)
 
         cap.release()
         out_video.release()

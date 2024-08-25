@@ -1,4 +1,4 @@
 from .speaker_classifier import SpeakerClassifier
-from .text_transcriber import TextTranscriberOnline
+from .text_transcriber import TextTranscriber
 
-__all__ = ["SpeakerClassifier", "TextTranscriberOnline"]
+__all__ = ["SpeakerClassifier", "TextTranscriber"]

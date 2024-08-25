@@ -16,7 +16,6 @@ class ProductionModel:
         self.text_transcriber = TextTranscriberOnline()
         self.speaker_classifier = SpeakerClassifier()
         self.person_detector = PersonDetector()
-        print("Production model initialized.")
 
     def listen(self) -> None:
         self.text_transcriber.listen()
