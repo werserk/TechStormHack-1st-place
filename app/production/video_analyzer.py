@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import List, Dict
 
 import cv2
 import numpy as np
@@ -10,8 +11,8 @@ from tqdm import tqdm
 
 import app.video.viz as viz
 from app.audio.speech_analyzer import SpeechAnalyzer
-from app.llm.yandexgpt import YandexGPTSession
-from app.production.constants import persons_part2, BASIC_SYSTEM_PROMPT, FONT, YandexGPTConfig
+from app.production.constants import persons_part2, FONT
+from app.production.metrics import MetricsCalculator
 from app.video.detector import PersonDetector
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ class VideoAnalyzer:
         self.persons = {person.name: person for person in persons}
         self.speaker_classifier = SpeechAnalyzer()
         self.person_detector = PersonDetector(persons=persons)
-        self.gpt = YandexGPTSession(api_key=YandexGPTConfig.api_key, system_prompt=BASIC_SYSTEM_PROMPT)
+        self.metrics_calculator = MetricsCalculator(persons=persons)
         self.messages = []
 
     @staticmethod
@@ -88,6 +89,12 @@ class VideoAnalyzer:
             current_time = current_frame / fps
 
             active_phrases = self._get_active_phrases(phrases, current_time)
+            count_threshold = 3
+            for phrase in active_phrases:
+                if phrase not in self.messages:
+                    self.messages.append(phrase)
+                    if len(self.messages) % count_threshold == 0:
+                        self.metrics_calculator(self.messages[:-count_threshold])
             self._update_persons_voices(frame, active_phrases)
             frame = Image.fromarray(frame)
             frame = self._annotate_frame(frame, active_phrases)
@@ -165,12 +172,13 @@ class VideoAnalyzer:
         final_clip = video_clip.set_audio(audio_clip)
         final_clip.write_videofile(save_path, codec="libx264", audio_codec="aac")
 
-    def __call__(self, video_path: str, save_path: str) -> None:
+    def __call__(self, video_path: str, save_path: str) -> List[Dict[str, str]]:
         temp_audio_path = "temp.wav"
         self.convert_video_to_audio(video_path, temp_audio_path)
         phrases = self.analyze_speakers(temp_audio_path)
         temp_video_path = self.process_video(video_path, phrases)
         self.merge_audio_and_video(temp_video_path, temp_audio_path, save_path)
+        return self.metrics_calculator.metrics
 
 
 def process_test():

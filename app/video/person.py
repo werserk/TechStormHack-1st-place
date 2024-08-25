@@ -6,4 +6,8 @@ class Person:
         self.voices = {}
 
     def __str__(self) -> str:
-        return f"{self.name} {self.surname}"
+        if self.name and self.surname:
+            return f"{self.name} {self.surname}"
+        if self.name:
+            return self.name
+        return self.surname

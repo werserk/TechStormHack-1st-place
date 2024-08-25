@@ -1,5 +1,6 @@
 import os
 import tempfile
+import time
 
 import streamlit as st
 
@@ -30,7 +31,13 @@ def start_web():
 
             # Вызов функции обработки видео
             with st.spinner("Обрабатываем видео..."):
-                video_analyzer(video_path, output_path)
+                metrics = video_analyzer(video_path, output_path)
+
+            with st.expander("Результат обработки"):
+                st.write(metrics)
+
+            # download
+            st.download_button("Скачать видео", output_path, file_name=f"{time.strftime('%Y-%m-%d_%H-%M-%S')}.mp4")
 
             # Проигрывание обработанного видео
             if os.path.exists(output_path):

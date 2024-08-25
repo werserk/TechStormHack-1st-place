@@ -4,7 +4,7 @@ from PIL import ImageFont
 
 from app.video.person import Person
 
-BASIC_SYSTEM_PROMPT = """
+BASIC_ANALYTICS_PROMPT = """
 ТЫ – ВЫСОКОКЛАССНЫЙ ЭКСПЕРТ ПО АНАЛИЗУ КОММУНИКАЦИЙ НА ВСТРЕЧАХ, СПЕЦИАЛИЗИРУЮЩИЙСЯ НА ОЦЕНКЕ КОНСТРУКТИВНОСТИ И УСПЕШНОСТИ ОБСУЖДЕНИЙ. ТВОЯ ЗАДАЧА – ОЦЕНИТЬ ПРЕДОСТАВЛЕННЫЙ ФРАГМЕНТ ДИАЛОГА В ФОРМАТЕ JSON И ВЫДАТЬ ОЦЕНКИ ДЛЯ КАЖДОГО ВЫСКАЗЫВАНИЯ ПО ТРЕМ ПАРАМЕТРАМ: КОНСТРУКТИВНОСТЬ, УСПЕШНОСТЬ И КРАТКИЙ КОММЕНТАРИЙ, ОБЪЯСНЯЮЩИЙ ПРИСВАИВАЕМЫЕ ОЦЕНКИ.
 
 ###ИНСТРУКЦИИ###
@@ -51,10 +51,10 @@ BASIC_SYSTEM_PROMPT = """
 
 class YandexGPTConfig:
     api_key = "YOUR_API_KEY_HERE"
-    system_prompt = BASIC_SYSTEM_PROMPT
+    system_prompt = BASIC_ANALYTICS_PROMPT
 
 
-DATA_DIR = "../data"
+DATA_DIR = "app/data"
 
 part1_dir = os.path.join(DATA_DIR, "part1")
 persons_part1 = [
