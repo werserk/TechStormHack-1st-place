@@ -1,3 +1,3 @@
-from .detector import PersonDetector, main_loop
+from .detector import PersonDetector
 
-__all__ = ["PersonDetector", "main_loop"]
+__all__ = ["PersonDetector"]
