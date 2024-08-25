@@ -103,12 +103,19 @@ class VideoAnalyzer:
             names = faces["names"]
             if len(names) == 1 and len(active_speakers) == 1:
                 name = names[0]
+                speaker = list(active_speakers)[0]
                 if name != PersonDetector.UNKNOWN_NAME:
-                    speaker = list(active_speakers)[0]
                     if speaker in self.persons[name].voices:
                         self.persons[name].voices[speaker] += 1
                     else:
                         self.persons[name].voices[speaker] = 1
+                # else:
+                #     face = faces["locations"][0]
+                #     top, right, bottom, left = face
+                #     face_image = frame[top:bottom, left:right]
+                #     cv2.imshow("Face", face_image)
+                #     cv2.waitKey(0)
+                #     self.persons[speaker] = Person(speaker, "", "")
 
             speaker_names = set()
             for speaker in active_speakers:
@@ -123,6 +130,7 @@ class VideoAnalyzer:
             self.add_annotation_to_frame(frame, ", ".join(list(speaker_names)), GREEN_COLOR, FONT)
             for i in range(len(faces["names"])):
                 frame = viz.draw_person_name(frame, names[i], faces["locations"][i])
+                # frame = viz.draw_landmarks(frame, faces["landmarks"][i])
 
             out_video.write(frame)
             current_frame += 1
@@ -171,13 +179,13 @@ class VideoAnalyzer:
 def process_test():
     video_path = "../../data/video/test_1_min.mp4"
     analyzer = VideoAnalyzer()
-    analyzer(video_path, save_path="../../data/video/test_1_min_output.mp4")
+    analyzer(video_path, save_path="../../data/predicts/test_1_min_output.mp4")
 
 
 def process_our_video():
     video_path = "/home/werserk/ours_test.mp4"
     analyzer = VideoAnalyzer()
-    analyzer(video_path, save_path="../../data/video/test_ours_output.mp4")
+    analyzer(video_path, save_path="../../data/predicts/ours.mp4")
 
 
 def process_final():

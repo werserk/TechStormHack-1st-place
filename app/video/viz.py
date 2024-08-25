@@ -24,3 +24,13 @@ def draw_person_name(image: np.array, name: str, coords: tuple) -> np.array:
     text_position = (right + right_padding, top - top_padding * 3)
     draw.text(text_position, name, font=FONT, fill=GREEN_COLOR)
     return np.array(image_pil)
+
+
+def draw_landmarks(image: np.array, landmarks: dict) -> np.array:
+    image_pil = Image.fromarray(image)
+    draw = ImageDraw.Draw(image_pil)
+
+    for name, points in landmarks.items():
+        for point in points:
+            draw.ellipse((point[0] - 1, point[1] - 1, point[0] + 1, point[1] + 1), fill=GREEN_COLOR)
+    return np.array(image_pil)
