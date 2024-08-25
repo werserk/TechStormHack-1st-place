@@ -26,8 +26,7 @@ class VideoAnalyzer:
         self.persons = {person.name: person for person in persons}
         self.speaker_classifier = SpeechAnalyzer()
         self.person_detector = PersonDetector(persons=persons)
-        self.gpt = YandexGPTSession(api_key=YandexGPTConfig.api_key,
-                                    system_prompt=BASIC_SYSTEM_PROMPT)
+        self.gpt = YandexGPTSession(api_key=YandexGPTConfig.api_key, system_prompt=BASIC_SYSTEM_PROMPT)
         self.messages = []
 
     @staticmethod
