@@ -24,7 +24,7 @@ class SpeechAnalyzer:
         diarization = self.model(audio_data)
         idx = 0
         for segment, _, speaker in tqdm(
-                diarization.itertracks(yield_label=True), total=len(diarization), desc="Speech transcribition"
+            diarization.itertracks(yield_label=True), total=len(diarization), desc="Speech transcribition"
         ):
             start_time = segment.start
             end_time = segment.end
