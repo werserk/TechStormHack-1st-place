@@ -6,9 +6,7 @@
 
 Сайт соревнования: [itcongress.tatneft.tatar](https://itcongress.tatneft.tatar/) \
 GitHub: [github.com/werserk/TechStorm-hack](https://github.com/werserk/TechStorm-hack/) \
-Презентация: [LINK]() \
-Решение: [team-analytics.medpaint.ru]() \
-Полный код: [LINK]()
+Презентация: [LINK](https://docs.google.com/presentation/d/1CF9RO24Hzh5-FVmpxpWyX9oChEJhYoVV/edit?usp=sharing&ouid=116202268270672729224&rtpof=true&sd=true)
 
 ## Установка
 
