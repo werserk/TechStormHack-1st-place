@@ -21,6 +21,8 @@ moviepy = "^1.0.3"
 streamlit = "^1.37.1"
 realtimestt = "^0.2.41"
 faster-whisper = "^1.0.3"
+onnxruntime = ">=1.23.2,<1.24"
+setuptools = ">=78.1.1,<82"
 
 [tool.black]
 line-length = 120
